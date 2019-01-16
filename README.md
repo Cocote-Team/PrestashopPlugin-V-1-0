@@ -2,7 +2,7 @@
 
 This module generates feed and communicates with cocote.com website to let it aggregate your products data.
 
-1) Installation To install the module
+1) Install the module
 
 Clone the Plugin : git clone https://vang-publish-it@bitbucket.org/publish-it/cocotefeed.git
 
