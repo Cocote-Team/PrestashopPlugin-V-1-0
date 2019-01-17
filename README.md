@@ -4,7 +4,7 @@ This module generates feed and communicates with cocote.com website to let it ag
 
 1) Install the module
 
-Clone the Plugin : git clone https://vang-publish-it@bitbucket.org/publish-it/cocotefeed.git
+Clone the Plugin : git clone git@github.com:Cocote-Team/PrestashopPlugin.git
 
 or
 
@@ -12,7 +12,7 @@ Download the plugin .zip
 
 2) Transfer and copy
 
-Copy the Plugin cocotefeed to modules folder in your serveur.
+Copy the file "cocotefeed"  to modules folder in your server.
 
 3) In the Back-Office
 
@@ -24,9 +24,9 @@ Admin PrestaShop : Modules > Modules & services
 
 Admin PrestaShop : Search bar, "cocote".
 
-                   installed module.
+                   install module.
 
-5) Configured
+5) Configure
 
 Admin PrestaShop : Modules > Modules & services
 
@@ -40,7 +40,7 @@ Pour installer ce module:
 
 1) Le Plugin
 
-Cloner le Plugin : git clone https://vang-publish-it@bitbucket.org/publish-it/cocotefeed.git
+Cloner le Plugin : git clone git@github.com:Cocote-Team/PrestashopPlugin.git
 
 ou
 
@@ -48,7 +48,7 @@ Télécharger le plugin en .zip
 
 2) Transfert et copie des fichiers
 
-Copier le dossier cocotefeed dans le répertoire modules sur votre serveur.
+Copier le dossier "cocotefeed" dans le répertoire modules sur votre serveur.
 
 3) Sélectionner le Plugin dans le Back-Office
 

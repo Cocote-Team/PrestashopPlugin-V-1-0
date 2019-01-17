@@ -20,10 +20,9 @@ class CocoteFeed extends Module
         parent::__construct();
         
         require_once( _PS_MODULE_DIR_ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'DBTeam.php' );
-        require_once( _PS_MODULE_DIR_ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'CashbackCocote.php');
         
         $this->displayName = $this->l('Cocotefeed');
-        $this->description = $this->l('Cocote export for Prestashop version 1.6.*');
+        $this->description = $this->l('Cocote export for Prestashop version 1.6.* to '._PS_VERSION_);
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
     }
     
@@ -98,35 +97,6 @@ class CocoteFeed extends Module
     }
     
     /* --- HOOKS --- */
-    
-    public function hookDisplayAdminProductsExtra($params)
-    {
-        if (isset($params['id_product']) && (int)$params['id_product']) {
-            $sql = "SELECT product_id,labels,categories FROM cocote_export WHERE product_id = ".$params['id_product'];
-            if($row = Db::getInstance()->getRow($sql)){
-                $categories = unserialize($row['categories']);
-                $labels = unserialize($row['labels']);
-            }
-            else{
-                $categories = array();
-                $labels = array();
-            }
-            
-            $product = new Product($params['id_product']);
-            $category = new Category((int)$product->id_category_default, (int)Configuration::get('PS_LANG_DEFAULT'));
-            
-            $this->context->smarty->assign(
-                array(
-                    'product_id' => $params['id_product'],
-                    'categoryName' => $category->name,
-                    'productStatus' => DBTeam::checkProductExportStatus($params['id_product']), 
-                    'cocoteCategories' => $categories,
-                    'cocoteLabels' => $labels,
-                )
-            );
-            return $this->display(__FILE__, 'product-tab.tpl');
-        }
-    }
 
     public function hookActionOrderStatusUpdate($params)
     {
@@ -149,7 +119,7 @@ class CocoteFeed extends Module
 
                     fclose($fp);
 
-                    exec('php '. _PS_MODULE_DIR_ . 'cocotefeed' . DIRECTORY_SEPARATOR . 'CashbackCocote-2.php'.
+                    exec('php '. _PS_MODULE_DIR_ . 'cocotefeed' . DIRECTORY_SEPARATOR . 'CashbackCocote.php'.
                         ' '.$rowCocoteExport['shop_id'].
                         ' '.$rowCocoteExport['private_key'].
                         ' '.$rowCustomer['email'].
@@ -202,21 +172,21 @@ class CocoteFeed extends Module
                 array(
                     'type' => 'text',
                     'style' => 'text-align: center',
-                    'label' => 'Status',
+                    'label' => $this->l('Status'),
                     'readonly' => 'readonly',
                     'name' => 'COCOTE_STATUS'
                 ),
                 array(
                     'type' => 'text',
                     'style' => 'text-align: center',
-                    'label' => 'Nombre de produit(s) à exporter',
+                    'label' => $this->l('Nombre de produit(s) à exporter'),
                     'readonly' => 'readonly',
                     'name' => 'COCOTE_EXPORTED_PRODUCT_NUMBER'
                 ),
 
                 array(
                     'type' => 'text',
-                    'label' => 'Shop ID',
+                    'label' => $this->l('Shop ID'),
                     'name' => 'COCOTE_EXPORTED_SHOP_ID',
                     'size' => 100,
                     'hint' => 'Retrouvez votre identifiant depuis votre compte marchand Cocote',
@@ -224,11 +194,9 @@ class CocoteFeed extends Module
                 ),
 
                 array(
-                    //'type' => 'password',
                     'type' => 'text',
-                    'label' => 'Private Key',
+                    'label' => $this->l('Private Key'),
                     'name' => 'COCOTE_EXPORTED_PRIVATE_KEY',
-                    'placeholder' => 'COCOTE_EXPORTED_PRIVATE_KEY',
                     'size' => 100,
                     'hint' => 'Retrouvez votre clé privée depuis votre compte marchand Cocote',
                     'required' => true,
@@ -236,7 +204,7 @@ class CocoteFeed extends Module
 
                 array(
                     'type' => 'checkbox',
-                    'label' => 'Exportez uniquemment les produits en stock',
+                    'label' => $this->l('Exportez uniquemment les produits en stock'),
                     'name' => 'COCOTE_STATUS',
                     'values' => array(
                         'query' => array(
@@ -254,7 +222,7 @@ class CocoteFeed extends Module
                 array(
                     'type' => 'text',
                     'style' => 'text-align: center',
-                    'label' => 'Lien vers le flux XML',
+                    'label' => $this->l('Lien vers le flux XML'),
                     'hint' => 'Votre flux sera réactualisé automatiquement chaque jour vers 3 heures (matin)',
                     'readonly' => 'readonly',
                     'name' => 'COCOTE_FLUX'
@@ -308,16 +276,11 @@ class CocoteFeed extends Module
         );
 
         $helper->fields_value['COCOTE_STATUS'] = DBTeam::checkConfigurationStatus();
-
         $helper->fields_value['COCOTE_EXPORTED_PRODUCT_NUMBER'] = DBTeam::checkHowManyProduct($this->stock);
-
-
         $helper->fields_value['COCOTE_EXPORTED_SHOP_ID'] = Configuration::get('COCOTE_EXPORTED_SHOP_ID');
         $helper->fields_value['COCOTE_EXPORTED_PRIVATE_KEY'] = Configuration::get('COCOTE_EXPORTED_PRIVATE_KEY');
-        $helper->fields_value['COCOTE_EXPORTED_GODFATHER_ADVANTAGES'] = Configuration::get('COCOTE_EXPORTED_GODFATHER_ADVANTAGES');
-        $helper->fields_value['COCOTE_EXPORTED_GODSON_ADVANTAGES'] = Configuration::get('COCOTE_EXPORTED_GODSON_ADVANTAGES');
-        $helper->fields_value['COCOTE_EXPORTED_SPONSOR_DETAILS'] = Configuration::get('COCOTE_EXPORTED_SPONSOR_DETAILS');
         $helper->fields_value['COCOTE_FLUX'] = DBTeam::generateCocoteXml(Configuration::get('COCOTE_STATUS_STOCK'));
+
         $status_stock = Configuration::get('COCOTE_STATUS_STOCK');
         if(Configuration::get('COCOTE_STATUS_STOCK') == ''){
             $status_stock = $this->stock;
@@ -325,23 +288,6 @@ class CocoteFeed extends Module
         $helper->fields_value['COCOTE_STATUS_STOCK'] = $status_stock;
 
         return $helper->generateForm($fields_form);
-    }
-    
-    private function getFeatures()
-    {
-        $default_lang = (int)Configuration::get('PS_LANG_DEFAULT');
-        $features = Feature::getFeatures($default_lang);
-        
-        $option['key'] = 'NULL';
-        $option['name'] = '- Choice feature -';
-        $response[] = $option;
-        
-        foreach($features as $feature){
-            $option['key'] = $feature['id_feature']; 
-            $option['name'] = $feature['name']; 
-            $response[] = $option;
-        }
-        return $response;
     }
 
     /**
@@ -365,22 +311,6 @@ class CocoteFeed extends Module
                 //Lancement des actions du matin
                 fputs($fp, 'generateCocoteXml()'."\n");
                 DBTeam::generateCocoteXml($this->stock);
-                break;
-
-            case 07:
-                //Lancement des actions du matin
-                break;
-
-            case 15:
-                //Lancement des actions du midi
-                break;
-
-            case 16:
-                //Lancement des actions du midi
-                break;
-
-            case 17:
-                //Lancement des actions du midi
                 break;
 
             case 18:
@@ -412,7 +342,6 @@ class CocoteFeed extends Module
     {
         // à mettre quand le script de suivi en JS sera opérationnel
         //$this->context->controller->addJS($this->_path . 'https://fr.cocote.com/storage/script-fr.min.js', 'all');
-        //$this->context->controller->addJS($this->_path . 'views/js/cocote-script-fr.min.js', 'all');
         //$this->context->controller->addJS($this->_path . 'views/js/script-fr.min.js', 'all');
 
         //return $this->display(__FILE__, 'views/templates/front/analytics.tpl');
