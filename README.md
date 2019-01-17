@@ -4,7 +4,7 @@ This module generates feed and communicates with cocote.com website to let it ag
 
 1) Install the module
 
-Clone the Plugin : git clone git@github.com:Cocote-Team/PrestashopPlugin.git
+Clone the Plugin : git clone https://github.com/Cocote-Team/PrestashopPlugin.git
 
 or
 
@@ -40,7 +40,7 @@ Pour installer ce module:
 
 1) Le Plugin
 
-Cloner le Plugin : git clone git@github.com:Cocote-Team/PrestashopPlugin.git
+Cloner le Plugin : git clone https://github.com/Cocote-Team/PrestashopPlugin.git
 
 ou
 
