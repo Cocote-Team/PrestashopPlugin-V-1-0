@@ -14,14 +14,16 @@ class CashbackCocote
     public $_orderId;
     public $_orderPrice;
     public $_priceCurrency;
+    public $_orderState;
 
-    public function __construct($shopId, $privateKey, $email, $orderId, $orderPrice, $priceCurrency){
+    public function __construct($shopId, $privateKey, $email, $orderId, $orderPrice, $priceCurrency, $orderState){
         $this->_shopId          = $shopId;
         $this->_privateKey      = $privateKey;
         $this->_email           = $email;
         $this->_orderId         = $orderId;
         $this->_orderPrice      = $orderPrice;
         $this->_priceCurrency   = $priceCurrency ;
+        $this->_orderState     = $orderState;
     }
 
     public function sendOrderToCocote()
@@ -38,6 +40,7 @@ class CashbackCocote
             'orderId' => $this->_orderId,
             'orderPrice' => $this->_orderPrice,
             'priceCurrency' => $this->_priceCurrency,
+            'orderState' => $this->_orderState,
         );
 
             fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] data = '
@@ -47,6 +50,7 @@ class CashbackCocote
                 .$data['orderId'].' - '
                 .$data['orderPrice'].' - '
                 .$data['priceCurrency'].' - '
+                .$data['orderState']
                 . "\n");
 
             if (!function_exists('curl_version')) {
@@ -62,7 +66,7 @@ class CashbackCocote
 
             curl_setopt($curl, CURLOPT_URL, "https://fr.cocote.com/api/cashback/request");    // API de prod
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-
+            
             $result = curl_exec($curl);
             curl_close($curl);
 
@@ -98,6 +102,6 @@ class CashbackCocote
 }
 
 if(isset($argv[1]) && isset($argv[2]) && isset($argv[3]) && isset($argv[4]) && isset($argv[5]) ) {
-    $cashback_cocote = new CashbackCocote($argv[1], $argv[2], $argv[3], $argv[4], number_format($argv[5], 2, '.', ' '), 'EUR');
+    $cashback_cocote = new CashbackCocote($argv[1], $argv[2], $argv[3], $argv[4], number_format($argv[5], 2, '.', ' '), 'EUR', $argv[6]);
     $cashback_cocote->sendOrderToCocote();
 }

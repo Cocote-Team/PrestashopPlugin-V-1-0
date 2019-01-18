@@ -105,7 +105,8 @@ class CocoteFeed extends Module
             if ($params['newOrderStatus']->id == Configuration::get('PS_OS_WS_PAYMENT') ||
                 $params['newOrderStatus']->id == Configuration::get('PS_OS_PAYMENT') ||
                 $params['newOrderStatus']->id == Configuration::get('PS_OS_DELIVERED') ||
-                $params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING')) {
+                $params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING') ||
+                $params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')) {
                 $rowCustomer = DBTeam::checkCustomerByIdOrder($params['id_order']);
                 $rowCocoteExport = DBTeam::checkCocoteExport();
                 if(count($rowCustomer)>0 AND count($rowCocoteExport)>0) {
@@ -119,12 +120,18 @@ class CocoteFeed extends Module
 
                     fclose($fp);
 
+                    $status = 'completed';
+                    if($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED'))
+                        $status = 'cancelled';
+
                     exec('php '. _PS_MODULE_DIR_ . 'cocotefeed' . DIRECTORY_SEPARATOR . 'CashbackCocote.php'.
                         ' '.$rowCocoteExport['shop_id'].
                         ' '.$rowCocoteExport['private_key'].
                         ' '.$rowCustomer['email'].
                         ' '.$params['id_order'].
-                        ' '.$rowCustomer['total_paid']);
+                        ' '.$rowCustomer['total_paid'].
+                        ' '.$status
+                    );
                 }
             }
         }
