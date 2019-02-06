@@ -13,7 +13,7 @@ class GenerateXml extends ObjectModel
         $this->domtree = new DOMDocument('1.0', 'UTF-8');
         $this->protocol = $this->checkHTTPS();
         $this->langID = Configuration::get('PS_LANG_DEFAULT');
-        $this->xmlFile = hash('crc32','cocotefeed').'.xml';
+        $this->xmlFile = hash('crc32',__FILE__).'.xml';
         $this->cms = 'prestashop';
         $this->stock = $stock;
         require_once( _PS_MODULE_DIR_  . 'cocotefeed' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'DBTeam.php' );
