@@ -10,7 +10,7 @@ class CocoteFeed extends Module
     {
         $this->name = 'cocotefeed'; //like folder name
         $this->tab = 'front_office_features';
-        $this->version = '1.0.1';
+        $this->version = '1.0.2';
         $this->author = 'Vang KU';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
@@ -37,8 +37,6 @@ class CocoteFeed extends Module
                 !$this->registerHook('actionOrderStatusUpdate')
                 || !$this->registerHook('actionCronJob')
                 || !$this->registerHook('header')
-                || !$this->registerHook('displayLeftColumn')
-                || !$this->registerHook('displayRightColumn')
             ){
             return false;
         }
@@ -57,10 +55,7 @@ class CocoteFeed extends Module
                 `shop_id` varchar(10) NOT NULL,
                 `private_key` varchar(255) NOT NULL,
                 `export_status` int(1) NOT NULL DEFAULT '1',
-                `export_xml` varchar(255) NOT NULL,
-                `product_id` int(11) NOT NULL,
-                `labels` varchar(9999) NOT NULL,
-                `categories` varchar(9999) NOT NULL
+                `export_xml` varchar(255) NOT NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
 
         $primaryKey = "ALTER TABLE `cocote_export` ADD UNIQUE KEY `id_export` (`id_export`);";
@@ -106,33 +101,60 @@ class CocoteFeed extends Module
                 $params['newOrderStatus']->id == Configuration::get('PS_OS_PAYMENT') ||
                 $params['newOrderStatus']->id == Configuration::get('PS_OS_DELIVERED') ||
                 $params['newOrderStatus']->id == Configuration::get('PS_OS_SHIPPING') ||
-                $params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')) {
+                $params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED')
+            ) {
                 $rowCustomer = DBTeam::checkCustomerByIdOrder($params['id_order']);
                 $rowCocoteExport = DBTeam::checkCocoteExport();
-                if(count($rowCustomer)>0 AND count($rowCocoteExport)>0) {
+                if (count($rowCustomer) > 0 AND count($rowCocoteExport) > 0) {
 
                     if (!file_exists(_PS_MODULE_DIR_ . $this->name . DIRECTORY_SEPARATOR . 'log')) {
                         mkdir(_PS_MODULE_DIR_ . $this->name . DIRECTORY_SEPARATOR . 'log');
                     }
                     $fp = fopen(_PS_MODULE_DIR_ . $this->name . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'log_' . date('Ymd') . '.log', 'a+');
-                    $observer = '[LOG ' . date('Y-m-d H:i:s') . '] newOrderStatus = '.$params['newOrderStatus']->id;
+                    $observer = '[LOG ' . date('Y-m-d H:i:s') . '] newOrderStatus = ' . $params['newOrderStatus']->id;
                     fwrite($fp, $observer . "\n");
 
                     fclose($fp);
 
                     $status = 'completed';
-                    if($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED'))
+                    if ($params['newOrderStatus']->id == Configuration::get('PS_OS_CANCELED'))
                         $status = 'cancelled';
 
-                    exec('php '. _PS_MODULE_DIR_ . 'cocotefeed' . DIRECTORY_SEPARATOR . 'CashbackCocote.php'.
-                        ' '.$rowCocoteExport['shop_id'].
-                        ' '.$rowCocoteExport['private_key'].
-                        ' '.$rowCustomer['email'].
-                        ' '.$params['id_order'].
-                        ' '.$rowCustomer['total_paid'].
-                        ' '.$status
+                    $orderDetails = OrderDetail::getList((int)$params['id_order']);
+                    $i = 0;
+                    $skus = '';
+                    foreach ($orderDetails as $orderDetail) {
+                        if ($i == 0) {
+                            $skus .= $orderDetail['product_id'];
+                        } else {
+                            $skus .= ',' . $orderDetail['product_id'];
+                        }
+                        $i++;
+                    }
+
+                    exec('php ' . _PS_MODULE_DIR_ . 'cocotefeed' . DIRECTORY_SEPARATOR . 'CashbackCocote.php' .
+                        ' ' . $rowCocoteExport['shop_id'] .
+                        ' ' . $rowCocoteExport['private_key'] .
+                        ' ' . $rowCustomer['email'] .
+                        ' ' . $params['id_order'] .
+                        ' ' . $rowCustomer['total_paid'] .
+                        ' ' . $status .
+                        ' ' . $skus
                     );
                 }
+            } else {
+                $rowCustomer = DBTeam::checkCustomerByIdOrder($params['id_order']);
+                $rowCocoteExport = DBTeam::checkCocoteExport();
+                if (count($rowCocoteExport) > 0) {
+                    $this->context->smarty->assign(
+                        array(
+                            'mSiteId' => $rowCocoteExport['shop_id'],
+                            'amount' => $rowCustomer['total_paid'],
+                            'orderId' => $params['id_order']
+                        ));
+                }
+                
+                return $this->display(__FILE__, 'views/templates/front/analytics_confirm.tpl');
             }
         }
     }
@@ -347,20 +369,15 @@ class CocoteFeed extends Module
 
     public function hookDisplayHeader()
     {
-        // à mettre quand le script de suivi en JS sera opérationnel
-        //$this->context->controller->addJS($this->_path . 'https://fr.cocote.com/storage/script-fr.min.js', 'all');
-        //$this->context->controller->addJS($this->_path . 'views/js/script-fr.min.js', 'all');
-
-        //return $this->display(__FILE__, 'views/templates/front/analytics.tpl');
-    }
-
-    public function hookDisplayLeftColumn($params)
-    {
-        //return $this->display(__FILE__, 'views/templates/front/analytics.tpl');
-    }
-
-    public function hookDisplayRightColumn($params)
-    {
-        //return $this->hookDisplayLeftColumn($params);
+        // script de suivi en JS
+        $rowCocoteExport = DBTeam::checkCocoteExport();
+        if(count($rowCocoteExport)>0) {
+            $this->context->smarty->assign(
+                array(
+                    'mSiteId' => $rowCocoteExport['shop_id'],
+                )
+            );
+        }
+        return $this->display(__FILE__, 'views/templates/front/analytics.tpl');
     }
 }

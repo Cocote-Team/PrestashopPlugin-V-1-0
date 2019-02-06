@@ -13,7 +13,7 @@ class GenerateXml extends ObjectModel
         $this->domtree = new DOMDocument('1.0', 'UTF-8');
         $this->protocol = $this->checkHTTPS();
         $this->langID = Configuration::get('PS_LANG_DEFAULT');
-        $this->xmlFile = hash('crc32',date('Ymd')).'.xml';
+        $this->xmlFile = hash('crc32','cocotefeed').'.xml';
         $this->cms = 'prestashop';
         $this->stock = $stock;
         require_once( _PS_MODULE_DIR_  . 'cocotefeed' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'DBTeam.php' );
@@ -30,7 +30,6 @@ class GenerateXml extends ObjectModel
         $productObj = new Product();
 
         $products = $productObj->getProducts($this->langID, 0, 0, 'id_product', 'DESC');
-
         
         $domtree = new DOMDocument('1.0', 'UTF-8');
 
@@ -41,6 +40,11 @@ class GenerateXml extends ObjectModel
         $attr = $domtree->createAttribute('cms');
         $attr->value = $this->cms;
         $generated->appendChild($attr);
+
+        $attr2 = $domtree->createAttribute('plugin_version');
+        $attr2->value = _PS_VERSION_;
+        $generated->appendChild($attr2);
+
         $domtree->appendChild($generated);
         $generated = $root->appendChild($generated);
         $text = $domtree->createTextNode(date('Y-m-d H:i:s'));
@@ -96,13 +100,19 @@ class GenerateXml extends ObjectModel
                 $npm = $product['id_product'];
             }
             $response[] = new DOMElement('mpn', $npm); /* REQUIS 1/2 */
+
+            $categoriesAll = $this->getProductBaliseCategory($product['id_product']);
+            $response[] = new DOMElement('category', $categoriesAll);
+
             $response[] = new DOMElement('link', htmlentities($links['product']));
             $response[] = new DOMElement('image_link', $links['image1']); /* REQUIS */
 
             if (!is_null($links['image2'])) {
                 $response[] = new DOMElement('image_link2', $links['image2']); /* OPTIONNEL */
             }
-            $response[] = new DOMElement('price', number_format($product['price'], 2, '.', ' '));
+
+            $priceTTC = Product::getPriceStatic($product['id_product']);
+            $response[] = new DOMElement('price', number_format(round($priceTTC, 2), 2, '.', ' '));
         }
         // all stock 
         if(!$this->stock) {
@@ -125,13 +135,19 @@ class GenerateXml extends ObjectModel
                 $npm = $product['id_product'];
             }
             $response[] = new DOMElement('mpn', $npm); /* REQUIS 1/2 */
+
+            $categoriesAll = $this->getProductBaliseCategory($product['id_product']);
+            $response[] = new DOMElement('category', $categoriesAll);
+
             $response[] = new DOMElement('link', htmlentities($links['product']));
             $response[] = new DOMElement('image_link', $links['image1']); /* REQUIS */
 
             if (!is_null($links['image2'])) {
                 $response[] = new DOMElement('image_link2', $links['image2']); /* OPTIONNEL */
             }
-            $response[] = new DOMElement('price', number_format($product['price'], 2, '.', ' '));
+
+            $priceTTC = Product::getPriceStatic($product['id_product']);
+            $response[] = new DOMElement('price', number_format(round($priceTTC, 2), 2, '.', ' '));//
         }
         return $response;
     }
@@ -237,5 +253,27 @@ class GenerateXml extends ObjectModel
         }
         
         return $keywords;
+    }
+
+    public function getProductBaliseCategory($productID)
+    {
+        $categoriesAll = Product::getProductCategoriesFull($productID);
+        $i = 0;
+        $category = '';
+        foreach ($categoriesAll as $categorie) {
+            if ($i == 0) {
+                $category .= str_replace(" ", "-", $categorie['name']);
+            } else {
+                $category .= ' > ' . str_replace(" ", "-", $categorie['name']);
+            }
+            $i++;
+        }
+        return $this->enleverCaracteresSpeciaux(strtolower($category));
+    }
+
+    public function enleverCaracteresSpeciaux($text) {
+        return str_replace( array('à','á','â','ã','ä', 'ç', 'è','é','ê','ë', 'ì','í','î','ï', 'ñ', 'ò','ó','ô','õ','ö', 'ù','ú','û','ü', 'ý','ÿ', 'À','Á','Â','Ã','Ä', 'Ç', 'È','É','Ê','Ë', 'Ì','Í','Î','Ï', 'Ñ', 'Ò','Ó','Ô','Õ','Ö', 'Ù','Ú','Û','Ü', 'Ý'),
+            array('a','a','a','a','a', 'c', 'e','e','e','e', 'i','i','i','i', 'n', 'o','o','o','o','o', 'u','u','u','u', 'y','y', 'A','A','A','A','A', 'C', 'E','E','E','E', 'I','I','I','I', 'N', 'O','O','O','O','O', 'U','U','U','U', 'Y'),
+            $text);
     }
 }

@@ -4,17 +4,8 @@ require_once( _PS_MODULE_DIR_  . $this->name . DIRECTORY_SEPARATOR . 'helpers' .
 
 class DBTeam extends ModuleAdminController
 {
-    private $domtree;
-    private $protocol; // 'https' or 'http'
-    private $langID;
-
     public function __construct() 
     {
-        $this->name = 'cocotefeed';
-        $this->domtree = new DOMDocument('1.0', 'UTF-8');
-        $this->protocol = $this->checkHTTPS();
-        $this->langID = Configuration::get('PS_LANG_DEFAULT');
-
         parent::__construct();
     }
     
@@ -194,8 +185,7 @@ class DBTeam extends ModuleAdminController
 
     public static function generateCocoteXml($statusStock)
     {
-        $link = new Link;
-        $url_shop = $link->getBaseLink();
+        $url_shop = DBTeam::getBaseLinkCocote();
         $urlShopFinal = '';
 
         /* Generate XML */
@@ -234,5 +224,30 @@ class DBTeam extends ModuleAdminController
         }
     }
 
+    public static function getBaseLinkCocote($idShop = null, $ssl = null, $relativeProtocol = false)
+    {
+        static $force_ssl = null;
 
+
+        if ($ssl === null) {
+            if ($force_ssl === null) {
+                $force_ssl = (Configuration::get('PS_SSL_ENABLED') && Configuration::get('PS_SSL_ENABLED_EVERYWHERE'));
+            }
+            $ssl = $force_ssl;
+        }
+
+        if (Configuration::get('PS_MULTISHOP_FEATURE_ACTIVE') && $idShop !== null) {
+            $shop = new Shop($idShop);
+        } else {
+            $shop = Context::getContext()->shop;
+        }
+
+        if ($relativeProtocol) {
+            $base = '//'.($ssl && Configuration::get('PS_SSL_ENABLED') ? $shop->domain_ssl : $shop->domain);
+        } else {
+            $base = (($ssl && Configuration::get('PS_SSL_ENABLED')) ? 'https://'.$shop->domain_ssl : 'http://'.$shop->domain);
+        }
+
+        return $base.$shop->getBaseURI();
+    }
 }
