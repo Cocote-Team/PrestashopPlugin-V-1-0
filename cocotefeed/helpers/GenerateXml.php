@@ -1,4 +1,8 @@
 <?php
+
+/**
+ * Class GenerateXml
+ */
 class GenerateXml extends ObjectModel
 {
     private $domtree;
@@ -8,6 +12,10 @@ class GenerateXml extends ObjectModel
     private $cms;
     private $stock;
 
+    /**
+     * GenerateXml constructor.
+     * @param $stock
+     */
     public function __construct($stock)
     {
         $this->domtree = new DOMDocument('1.0', 'UTF-8');
@@ -18,7 +26,10 @@ class GenerateXml extends ObjectModel
         $this->stock = $stock;
         require_once( _PS_MODULE_DIR_  . 'cocotefeed' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'DBTeam.php' );
     }
-    
+
+    /**
+     * @return string
+     */
     public function initContent()
     {
         if (DBTeam::checkConfigurationStatus() !== 'ACTIVE') {
@@ -73,85 +84,66 @@ class GenerateXml extends ObjectModel
         $this->directoryXml(getcwd(). DIRECTORY_SEPARATOR .$this->xmlFile);
         return $this->xmlFile;
     }
-    
-    private function getItemInnerXmlElements($product)
+
+    /**
+     * @param $product
+     * @param DOMDocument $domtree
+     * @return array
+     */
+    private function getItemInnerXmlElements($product, $domtree)
     {
-        $links = $this->getProductLinks($product['id_product']);
+        $offers = $domtree->getElementsByTagName('offers')->item(0);
 
-        $response = array();
-        // stock avalaible
         if($product['quantity']>0 && $this->stock) {
-            $response[] = new DOMElement('identifier', $product['id_product']); /* CUSTOM */
-            $response[] = new DOMElement('title', $product['name']); /* REQUIS */
+            $links = $this->getProductLinks($product['id_product']);
 
-            $response[] = new DOMElement('keywords', strip_tags($this->getProductCategories($product['id_product']))); /* REQUIS */
+            $currentprod = $domtree->createElement('item');
+            $offers->appendChild($currentprod);
 
-            $response[] = new DOMElement('brand', strip_tags($product['manufacturer_name'])); /* REQUIS */
-            $response[] = new DOMElement('description', strip_tags($product['description'])); /* REQUIS */
+            $currentprod->appendChild($domtree->createElement('identifier', $product['id_product']));
+            $currentprod->appendChild($domtree->createElement('link', htmlentities($links['product'])));
+            $currentprod->appendChild($domtree->createElement('keywords', strip_tags($this->getProductCategories($product['id_product']))));
+            $currentprod->appendChild($domtree->createElement('brand', strip_tags($product['manufacturer_name'])));
 
-            $gtin = $product['ean13'];
-            if ($gtin == '0') {
-                $gtin = '';
+            $descTitle = $domtree->createElement('title');
+            $descTitle->appendChild($domtree->createCDATASection($product['name']));
+            $currentprod->appendChild($descTitle);
+
+            $descTag = $domtree->createElement('description');
+            $descTag->appendChild($domtree->createCDATASection(strip_tags($product['description'])));
+            $currentprod->appendChild($descTag);
+
+            $currentprod->appendChild($domtree->createElement('image_link', $links['image1']));
+
+            if (!is_null($links['image2'])) {
+                $currentprod->appendChild($domtree->createElement('image_link2', $links['image2']));
             }
-            $response[] = new DOMElement('gtin', $gtin);
 
             $npm = $product['upc'];
             if ($product['upc'] == '') {
                 $npm = $product['id_product'];
             }
-            $response[] = new DOMElement('mpn', $npm); /* REQUIS 1/2 */
+            $currentprod->appendChild($domtree->createElement('mpn', $npm));
 
             $categoriesAll = $this->getProductBaliseCategory($product['id_product']);
-            $response[] = new DOMElement('category', $categoriesAll);
-
-            $response[] = new DOMElement('link', htmlentities($links['product']));
-            $response[] = new DOMElement('image_link', $links['image1']); /* REQUIS */
-
-            if (!is_null($links['image2'])) {
-                $response[] = new DOMElement('image_link2', $links['image2']); /* OPTIONNEL */
-            }
+            $currentprod->appendChild($domtree->createElement('category', $categoriesAll));
 
             $priceTTC = Product::getPriceStatic($product['id_product']);
-            $response[] = new DOMElement('price', number_format(round($priceTTC, 2), 2, '.', ' '));
-        }
-        // all stock 
-        if(!$this->stock) {
-            $response[] = new DOMElement('identifier', $product['id_product']); /* CUSTOM */
-            $response[] = new DOMElement('title', $product['name']); /* REQUIS */
-
-            $response[] = new DOMElement('keywords', strip_tags($this->getProductCategories($product['id_product']))); /* REQUIS */
-
-            $response[] = new DOMElement('brand', strip_tags($product['manufacturer_name'])); /* REQUIS */
-            $response[] = new DOMElement('description', strip_tags($product['description'])); /* REQUIS */
+            $currentprod->appendChild($domtree->createElement('price', number_format(round($priceTTC, 2), 2, '.', ' ')));
 
             $gtin = $product['ean13'];
             if ($gtin == '0') {
                 $gtin = '';
             }
-            $response[] = new DOMElement('gtin', $gtin);
 
-            $npm = $product['upc'];
-            if ($product['upc'] == '') {
-                $npm = $product['id_product'];
-            }
-            $response[] = new DOMElement('mpn', $npm); /* REQUIS 1/2 */
-
-            $categoriesAll = $this->getProductBaliseCategory($product['id_product']);
-            $response[] = new DOMElement('category', $categoriesAll);
-
-            $response[] = new DOMElement('link', htmlentities($links['product']));
-            $response[] = new DOMElement('image_link', $links['image1']); /* REQUIS */
-
-            if (!is_null($links['image2'])) {
-                $response[] = new DOMElement('image_link2', $links['image2']); /* OPTIONNEL */
-            }
-
-            $priceTTC = Product::getPriceStatic($product['id_product']);
-            $response[] = new DOMElement('price', number_format(round($priceTTC, 2), 2, '.', ' '));//
+            $currentprod->appendChild($domtree->createElement('gtin', $gtin));
         }
-        return $response;
     }
-   
+
+    /**
+     * @param $productID
+     * @return mixed
+     */
     private function getProductLinks($productID)
     {
         $link = new Link();
@@ -171,7 +163,10 @@ class GenerateXml extends ObjectModel
         
         return $response;
     }
-    
+
+    /**
+     * @return string
+     */
     private function checkHTTPS()
     {
         if(isset($_SERVER['HTTPS'])){
@@ -180,7 +175,11 @@ class GenerateXml extends ObjectModel
             return 'http';
         }
     }
-    
+
+    /**
+     * @param $serializeValues
+     * @return string
+     */
     private function prepareTargetValues($serializeValues)
     {
         $response = '';
@@ -196,7 +195,11 @@ class GenerateXml extends ObjectModel
         }
         return $response;
     }
-    
+
+    /**
+     * @param $productID
+     * @return string
+     */
     private function getMPN($productID)
     {
         $configFeatureID = Configuration::get('COCOTE_MPN');
@@ -209,7 +212,11 @@ class GenerateXml extends ObjectModel
         }
         return '';
     }
-    
+
+    /**
+     * @param $productID
+     * @return string
+     */
     private function getGTIN($productID)
     {
         $configFeatureID = Configuration::get('COCOTE_GTIN');
@@ -223,6 +230,10 @@ class GenerateXml extends ObjectModel
         return '';
     }
 
+    /**
+     * @param $xmlFileLocal
+     * @return string
+     */
     private function directoryXml($xmlFileLocal){
         chdir(_PS_ADMIN_DIR_);
         chdir('..');
@@ -235,6 +246,10 @@ class GenerateXml extends ObjectModel
         return $path;
     }
 
+    /**
+     * @param $productID
+     * @return string
+     */
     public function getProductCategories($productID){
         $keywords = '';
         $i = 0;
@@ -255,6 +270,10 @@ class GenerateXml extends ObjectModel
         return $keywords;
     }
 
+    /**
+     * @param $productID
+     * @return mixed
+     */
     public function getProductBaliseCategory($productID)
     {
         $categoriesAll = Product::getProductCategoriesFull($productID);
@@ -271,6 +290,10 @@ class GenerateXml extends ObjectModel
         return $this->enleverCaracteresSpeciaux(strtolower($category));
     }
 
+    /**
+     * @param $text
+     * @return mixed
+     */
     public function enleverCaracteresSpeciaux($text) {
         return str_replace( array('à','á','â','ã','ä', 'ç', 'è','é','ê','ë', 'ì','í','î','ï', 'ñ', 'ò','ó','ô','õ','ö', 'ù','ú','û','ü', 'ý','ÿ', 'À','Á','Â','Ã','Ä', 'Ç', 'È','É','Ê','Ë', 'Ì','Í','Î','Ï', 'Ñ', 'Ò','Ó','Ô','Õ','Ö', 'Ù','Ú','Û','Ü', 'Ý'),
             array('a','a','a','a','a', 'c', 'e','e','e','e', 'i','i','i','i', 'n', 'o','o','o','o','o', 'u','u','u','u', 'y','y', 'A','A','A','A','A', 'C', 'E','E','E','E', 'I','I','I','I', 'N', 'O','O','O','O','O', 'U','U','U','U', 'Y'),
