@@ -63,21 +63,10 @@ class GenerateXml extends ObjectModel
 
         $xmlRootTemponary = $domtree->createElement("offers");
         $xmlRoot = $xmlRoot->appendChild($xmlRootTemponary);
-
-
+        
         foreach($products as $product){
-                $product['quantity'] = Product::getQuantity($product['id_product']);
-                $elements = $this->getItemInnerXmlElements($product);
-                if (!$elements) {
-                    continue;
-                }
-
-            $currentprodTemponary = $domtree->createElement("item");
-            $currentprod = $xmlRoot->appendChild($currentprodTemponary);
-            
-            foreach($elements as $element){
-                $currentprod->appendChild($element);
-            }
+            $product['quantity'] = Product::getQuantity($product['id_product']);
+            $this->getItemInnerXmlElements($product, $domtree);
         }
 
         $domtree->save($this->xmlFile);
