@@ -1,7 +1,7 @@
 <?php
 if (!defined('_PS_VERSION_'))
 {
-  exit;
+    exit;
 }
 
 class CocoteFeed extends Module
@@ -9,10 +9,11 @@ class CocoteFeed extends Module
     public function __construct()
     {
         $this->name = 'cocotefeed'; //like folder name
-        $this->tab = 'front_office_features';
-        $this->version = '1.0.2';
+        $this->tab = 'cocotefeed';
+        $this->version = '1.0.3';
         $this->author = 'Vang KU';
         $this->need_instance = 0;
+        $this->controllers = array('cocotefeed');
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
         $this->bootstrap = true;
         $this->stock = true;
@@ -34,16 +35,19 @@ class CocoteFeed extends Module
             Shop::setContext(Shop::CONTEXT_ALL);
         }
         if (!parent::install() ||
-                !$this->registerHook('actionOrderStatusUpdate')
-                || !$this->registerHook('actionCronJob')
-                || !$this->registerHook('header')
-            ){
+            !$this->registerHook('actionOrderStatusUpdate')
+            || !$this->registerHook('actionCronJob')
+            || !$this->registerHook('header')
+        ){
             return false;
         }
 
         if(!$this->createProductsTable()){
             return false;
         }
+
+        $this->installModuleTab('AdminCocoteFeed', 'IMPROVE', 'Cocote Feed');
+        $this->installModuleTab('AdminCocoteFeedConfigure', 'AdminCocoteFeed', 'Configure');
 
         return true ;
     }
@@ -78,10 +82,35 @@ class CocoteFeed extends Module
         if(!$this->deleteProductsTable()){
             return false;
         }
+
+        $this->uninstallModuleTab('AdminCocoteFeed');
+        $this->uninstallModuleTab('AdminCocoteFeedConfigure');
         DBTeam::deleteConfiguration();
         return true;
     }
-    
+
+    private function installModuleTab($tabClass, $parent, $tabName)
+    {
+        $tab = new Tab();
+        $tab->active = 1;
+        $tab->class_name = $tabClass;
+        $tab->id_parent = (int)Tab::getIdFromClassName($parent);
+        $tab->position = Tab::getNewLastPosition($tab->id_parent);
+
+        foreach (Language::getLanguages(false) as $lang) {
+            $tab->name[(int)$lang['id_lang']] = $tabName;
+        }
+        $tab->module = $this->name;
+        return $tab->add();
+    }
+
+    private function uninstallModuleTab($tabClass)
+    {
+        $tab = new Tab((int)Tab::getIdFromClassName($tabClass));
+
+        return $tab->delete();
+    }
+
     private function deleteProductsTable()
     {
         $db = Db::getInstance();
