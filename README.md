@@ -8,7 +8,8 @@ Clone the Plugin : git clone https://github.com/Cocote-Team/PrestashopPlugin.git
 
 or
 
-Download the plugin .zip
+Download the plugin .zip and unzip it!
+
 
 2) Transfer and copy
 
@@ -44,11 +45,11 @@ Cloner le Plugin : git clone https://github.com/Cocote-Team/PrestashopPlugin.git
 
 ou
 
-Télécharger le plugin en .zip
+Télécharger le plugin en .zip et le dezipper (ex: winzip sous windows)
 
 2) Transfert et copie des fichiers
 
-Copier le dossier "cocotefeed" dans le répertoire modules sur votre serveur.
+Copier le dossier "cocotefeed" dans le répertoire modules sur votre serveur (via ftp par exemple).
 
 3) Sélectionner le Plugin dans le Back-Office
 
@@ -64,6 +65,6 @@ Admin PrestaShop : Dans la barre de recherche, rechercher le mot "cocote".
 
 5) Configurer le Module
 
-Admin PrestaShop : Modules > Modules & services
+Cliquer sur l'element 'Cocote Feed' dans la colonne de gauche puis:
 
                    cliquer sur "Configurer" du Module Cocotefeed.
