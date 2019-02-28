@@ -6,7 +6,7 @@ Ce module communique avec Cocote.com et genere un flux xml de vos offres produit
 
 Pour installer ce module:
 
-Télécharger https://github.com/Cocote-Team/PrestashopPlugin/raw/master/cocotefeed.zip
+1) Télécharger https://github.com/Cocote-Team/PrestashopPlugin/raw/master/cocotefeed.zip
 
 
 2) Transfert et copie des fichiers
