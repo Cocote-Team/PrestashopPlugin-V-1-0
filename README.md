@@ -6,15 +6,15 @@ Ce module communique avec Cocote.com et genere un flux xml de vos offres produit
 
 Pour installer ce module:
 
-Télécharger le plugin en .zip et le dezipper (ex: winzip sous windows
-(ou Cloner le Plugin : git clone https://github.com/Cocote-Team/PrestashopPlugin.git )
+Télécharger https://github.com/Cocote-Team/PrestashopPlugin/raw/master/cocotefeed.zip
+
 
 2) Transfert et copie des fichiers
 
 
 Aller sur votre Admin PrestaShop : Modules > Modules & services et cliquer sur 'installer un module'
 
-Faire un Drag n Drop du fichier cocotefeed.zip  dans le dossier.
+Faire un Drag n Drop du fichier telechargé cocotefeed.zip .
 
 
 3) Configurer le Module
