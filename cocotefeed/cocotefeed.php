@@ -10,8 +10,8 @@ class CocoteFeed extends Module
     {
         $this->name = 'cocotefeed'; //like folder name
         $this->tab = 'cocotefeed';
-        $this->version = '1.0.3';
-        $this->author = 'Vang KU';
+        $this->version = '1.0.4';
+        $this->author = 'Cocote Team';
         $this->need_instance = 0;
         $this->controllers = array('cocotefeed');
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);

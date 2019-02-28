@@ -38,6 +38,8 @@ class GenerateXml extends ObjectModel
             die();
         }
 
+        $module = Module::getInstanceByName('cocotefeed');
+
         $productObj = new Product();
 
         $products = $productObj->getProducts($this->langID, 0, 0, 'id_product', 'DESC');
@@ -53,6 +55,10 @@ class GenerateXml extends ObjectModel
         $generated->appendChild($attr);
 
         $attr2 = $domtree->createAttribute('plugin_version');
+        $attr2->value = $module->version;
+        $generated->appendChild($attr2);
+
+        $attr2 = $domtree->createAttribute('prestashop_version');
         $attr2->value = _PS_VERSION_;
         $generated->appendChild($attr2);
 
@@ -141,11 +147,11 @@ class GenerateXml extends ObjectModel
         $images = $product->getImages($this->langID);
         
         if(isset($images[0])){
-            $response['image1'] = $this->protocol.'://'.$link->getImageLink($product->link_rewrite[1],$images[0]['id_image']);
+            $response['image1'] = $this->protocol.'://'.$link->getImageLink($product->link_rewrite[Context::getContext()->language->id],$images[0]['id_image']);
         } 
         
         if(isset($images[1])){
-            $response['image2'] = $this->protocol.'://'.$link->getImageLink($product->link_rewrite[1],$images[1]['id_image']);
+            $response['image2'] = $this->protocol.'://'.$link->getImageLink($product->link_rewrite[Context::getContext()->language->id],$images[1]['id_image']);
         } else {
             $response['image2'] = null;
         }
