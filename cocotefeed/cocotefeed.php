@@ -10,7 +10,7 @@ class CocoteFeed extends Module
     {
         $this->name = 'cocotefeed'; //like folder name
         $this->tab = 'cocotefeed';
-        $this->version = '1.0.4';
+        $this->version = '1.0.5';
         $this->author = 'Cocote Team';
         $this->need_instance = 0;
         $this->controllers = array('cocotefeed');

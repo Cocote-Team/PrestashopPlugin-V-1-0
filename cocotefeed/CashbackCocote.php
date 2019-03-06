@@ -1,10 +1,7 @@
 <?php
 
 /**
- * Created by PhpStorm.
- * User: wang
- * Date: 20/12/18
- * Time: 16:45
+ * Class CashbackCocote
  */
 class CashbackCocote
 {
@@ -30,79 +27,95 @@ class CashbackCocote
 
     public function sendOrderToCocote()
     {
-        $fp = fopen( __DIR__ . DIRECTORY_SEPARATOR .'log'. DIRECTORY_SEPARATOR  . 'log_' . date('Ymd') . '.log', 'a+');
-        $observer = '[LOG ' . date('Y-m-d H:i:s') . '] Start function sendOrderToCocote()';
-        fwrite($fp, $observer . "\n");
+        if(! is_dir(__DIR__ . DIRECTORY_SEPARATOR . 'log')) {mkdir (__DIR__ . DIRECTORY_SEPARATOR . 'log', 0755);}
 
-        $elements = explode(',',$this->_skus);
-        try {
-        $data = array(
-            'shopId' => $this->_shopId,
-            'privateKey' => $this->_privateKey,
-            'email' => $this->_email,
-            'orderId' => $this->_orderId,
-            'orderPrice' => $this->_orderPrice,
-            'priceCurrency' => $this->_priceCurrency,
-            'orderState' => $this->_orderState,
-            'skus' => $elements,
-        );
+        $fp = fopen(__DIR__ . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'log_' . date('Ymd') . '.log', 'w');
+        if($this->isCurlLoad()) {
+            $observer = '[LOG ' . date('Y-m-d H:i:s') . '] Start function sendOrderToCocote()';
+            fwrite($fp, $observer . "\n");
 
-            fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] data = '
-                .$data['shopId'].' - '
-                .$data['privateKey'].' - '
-                .$data['email'].' - '
-                .$data['orderId'].' - '
-                .$data['orderPrice'].' - '
-                .$data['priceCurrency'].' - '
-                .$data['orderState'].' - '
-                .$this->_skus
-                . "\n");
+            fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] curl is load = ' . extension_loaded('curl') . "\n");
 
-            if (!function_exists('curl_version')) {
-                fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] no curl'. "\n");
-                throw new Exception('no curl');
-            }
+            $elements = explode(',', $this->_skus);
+            try {
+                $data = array(
+                    'shopId' => $this->_shopId,
+                    'privateKey' => $this->_privateKey,
+                    'email' => $this->_email,
+                    'orderId' => $this->_orderId,
+                    'orderPrice' => $this->_orderPrice,
+                    'priceCurrency' => $this->_priceCurrency,
+                    'orderState' => $this->_orderState,
+                    'skus' => $elements,
+                );
 
-            $start = mktime();
+                fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] data = '
+                    . $data['shopId'] . ' - '
+                    . $data['privateKey'] . ' - '
+                    . $data['email'] . ' - '
+                    . $data['orderId'] . ' - '
+                    . $data['orderPrice'] . ' - '
+                    . $data['priceCurrency'] . ' - '
+                    . $data['orderState'] . ' - '
+                    . $this->_skus
+                    . "\n");
 
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                $start = mktime();
 
-            curl_setopt($curl, CURLOPT_URL, "https://fr.cocote.com/api/cashback/request");    // API de prod
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+                $curl = curl_init();
+                curl_setopt($curl, CURLOPT_POST, 1);
+                curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
 
-            $result = curl_exec($curl);
-            curl_close($curl);
+                curl_setopt($curl, CURLOPT_URL, "https://fr.cocote.com/api/cashback/request");  // API de prod
+                curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($curl, CURLOPT_TIMEOUT_MS, 1000);
 
-            $json_data = json_decode($result);
-            $status = '';
-            $errors = '';
-            if($json_data != '') {
-                foreach ($json_data as $v) {
-                    if($v->status !='')
-                        $status = $v->status;
+                $result = curl_exec($curl);
+                $curl_errno = curl_errno($curl);
+                $curl_error = curl_error($curl);
+                curl_close($curl);
 
+                if($curl_errno > 0) {
+                    fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] curl_errno = ' . $curl_errno . "\n");
+                    fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] curl_error = ' . $curl_error . "\n");
+                }else{
+                    $json_data = json_decode($result);
+                    $status = '';
+                    $errors = '';
+                    if ($json_data != '') {
+                        foreach ($json_data as $v) {
+                            if ($v->status != '')
+                                $status = $v->status;
 
-                    if($v->errors[0] !='')
-                        $errors = $v->errors[0];
+                            if ($v->errors[0] != '')
+                                $errors = $v->errors[0];
 
+                        }
+                    }
+
+                    fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] Status Curl = ' . $status . " \n");
+                    fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] Errors Curl = ' . $errors . " \n");
+                    fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] Response Curl = ' . $result . " \n");
+                    $end = mktime();
+                    $dure = date("s", $end - $start);
+                    fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] durée Curl = ' . $dure . " s.\n");
                 }
+
+            } catch (Exception $e) {
+                fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] ' . $e->getMessage() . "\n");
             }
 
-            fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] Status Curl = '.$status. " \n");
-            fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] Errors Curl = '.$errors. " \n");
-            $end = mktime();
-            $dure = date("s", $end - $start );
-            fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] durée Curl = '. $dure . " s.\n");
-
-        } catch (Exception $e) {
-            fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] '.$e->getMessage(). "\n");
+            $observer = '[LOG ' . date('Y-m-d H:i:s') . '] End function sendOrderToCocote()';
+            fwrite($fp, $observer . "\n");
+            fclose($fp);
+        }else{
+            fwrite($fp, '[LOG ' . date('Y-m-d H:i:s') . '] CURL IS NOT LOAD'. "\n");
         }
+    }
 
-        $observer = '[LOG ' . date('Y-m-d H:i:s') . '] End function sendOrderToCocote()';
-        fwrite($fp, $observer . "\n");
-        fclose($fp);
+    private function isCurlLoad()
+    {
+        return extension_loaded('curl') ? true : false;
     }
 }
 
