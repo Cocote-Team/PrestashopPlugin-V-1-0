@@ -1,4 +1,5 @@
 <?php
+
 if (!defined('_PS_VERSION_'))
 {
     exit;
@@ -10,7 +11,7 @@ class CocoteFeed extends Module
     {
         $this->name = 'cocotefeed'; //like folder name
         $this->tab = 'cocotefeed';
-        $this->version = '1.0.5';
+        $this->version = '1.0.6';
         $this->author = 'Cocote Team';
         $this->need_instance = 0;
         $this->controllers = array('cocotefeed');
@@ -19,16 +20,17 @@ class CocoteFeed extends Module
         $this->stock = true;
 
         parent::__construct();
-        
+
         require_once( _PS_MODULE_DIR_ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'DBTeam.php' );
-        
+        require_once( _PS_MODULE_DIR_ . DIRECTORY_SEPARATOR . $this->name . DIRECTORY_SEPARATOR . 'CashbackCocote.php' );
+
         $this->displayName = $this->l('Cocotefeed');
         $this->description = $this->l('Cocote export for Prestashop version 1.6.* to '._PS_VERSION_);
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
     }
-    
+
     /* --- INSTALL --- */
-    
+
     public function install()
     {
         if (Shop::isFeatureActive()){
@@ -51,7 +53,7 @@ class CocoteFeed extends Module
 
         return true ;
     }
-    
+
     private function createProductsTable()
     {
         $table = "CREATE TABLE `cocote_export` (
@@ -64,7 +66,7 @@ class CocoteFeed extends Module
 
         $primaryKey = "ALTER TABLE `cocote_export` ADD UNIQUE KEY `id_export` (`id_export`);";
         $autoIncremente = "ALTER TABLE `cocote_export` MODIFY `id_export` int(10) NOT NULL AUTO_INCREMENT;";
-        
+
         $db = Db::getInstance();
         if(!$db->execute($table) || !$db->execute($primaryKey) || !$db->execute($autoIncremente)){
             return false;
@@ -73,7 +75,7 @@ class CocoteFeed extends Module
     }
 
     /* --- UNINSTALL --- */
-    
+
     public function uninstall()
     {
         if (!parent::uninstall() || !Configuration::deleteByName('MYMODULE_NAME')){
@@ -119,7 +121,7 @@ class CocoteFeed extends Module
         }
         return true;
     }
-    
+
     /* --- HOOKS --- */
 
     public function hookActionOrderStatusUpdate($params)
@@ -161,15 +163,8 @@ class CocoteFeed extends Module
                         $i++;
                     }
 
-                    exec('php ' . _PS_MODULE_DIR_ . 'cocotefeed' . DIRECTORY_SEPARATOR . 'CashbackCocote.php' .
-                        ' ' . $rowCocoteExport['shop_id'] .
-                        ' ' . $rowCocoteExport['private_key'] .
-                        ' ' . $rowCustomer['email'] .
-                        ' ' . $params['id_order'] .
-                        ' ' . $rowCustomer['total_paid'] .
-                        ' ' . $status .
-                        ' ' . $skus
-                    );
+                    $cashback = new CashbackCocote($rowCocoteExport['shop_id'], $rowCocoteExport['private_key'], $rowCustomer['email'], $params['id_order'], $rowCustomer['total_paid'], 'EUR', $status, $skus);
+                    $cashback->sendOrderToCocote();
                 }
             } else {
                 $rowCustomer = DBTeam::checkCustomerByIdOrder($params['id_order']);
@@ -182,14 +177,14 @@ class CocoteFeed extends Module
                             'orderId' => $params['id_order']
                         ));
                 }
-                
+
                 return $this->display(__FILE__, 'views/templates/front/analytics_confirm.tpl');
             }
         }
     }
 
     /* --- CONFIG --- */
-    
+
     public function getContent()
     {
         $output = null;
@@ -197,7 +192,7 @@ class CocoteFeed extends Module
         if (Tools::isSubmit('submit'.$this->name)){
             $values = DBTeam::getFormSubmitConfigValue();
             $validate = DBTeam::validateFormConfigValue($values);
-            
+
             DBTeam::saveFormSubmitConfigValue($values);
             $output .= $this->displayConfirmation($this->l('Paramètres enregistrés'));
 
@@ -214,7 +209,7 @@ class CocoteFeed extends Module
         $this->context->controller->addCSS($this->_path.'css/mymodule.css', 'all');
         return $output.$this->displayForm();
     }
-    
+
     public function displayForm()
     {
         // Get default language
