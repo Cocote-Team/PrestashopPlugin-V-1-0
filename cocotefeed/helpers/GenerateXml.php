@@ -96,7 +96,7 @@ class GenerateXml extends ObjectModel
             $offers->appendChild($currentprod);
 
             $currentprod->appendChild($domtree->createElement('identifier', $product['id_product']));
-            $currentprod->appendChild($domtree->createElement('link', htmlentities($links['product'])));
+            $currentprod->appendChild($domtree->createElement('link', $links['product']));
             $currentprod->appendChild($domtree->createElement('keywords', strip_tags($this->getProductCategories($product['id_product']))));
             $currentprod->appendChild($domtree->createElement('brand', strip_tags($product['manufacturer_name'])));
 

@@ -9,9 +9,9 @@ class CocoteFeed extends Module
 {
     public function __construct()
     {
-        $this->name = 'cocotefeed'; //like folder name
+        $this->name = 'cocotefeed';
         $this->tab = 'cocotefeed';
-        $this->version = '1.0.6';
+        $this->version = '1.0.7';
         $this->author = 'Cocote Team';
         $this->need_instance = 0;
         $this->controllers = array('cocotefeed');
