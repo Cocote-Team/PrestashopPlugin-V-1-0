@@ -11,7 +11,7 @@ class CocoteFeed extends Module
     {
         $this->name = 'cocotefeed';
         $this->tab = 'cocotefeed';
-        $this->version = '1.0.7';
+        $this->version = '1.0.8';
         $this->author = 'Cocote Team';
         $this->need_instance = 0;
         $this->controllers = array('cocotefeed');

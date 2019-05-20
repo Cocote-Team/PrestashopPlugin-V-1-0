@@ -23,7 +23,7 @@ class GenerateXml extends ObjectModel
         $this->langID = Configuration::get('PS_LANG_DEFAULT');
         $this->xmlFile = hash('crc32',__FILE__).'.xml';
         $this->cms = 'prestashop';
-        $this->stock = $stock;
+        $this->stock = (boolean)$stock;
         require_once( _PS_MODULE_DIR_  . 'cocotefeed' . DIRECTORY_SEPARATOR . 'helpers' . DIRECTORY_SEPARATOR . 'DBTeam.php' );
     }
 
@@ -33,8 +33,7 @@ class GenerateXml extends ObjectModel
     public function initContent()
     {
         if (DBTeam::checkConfigurationStatus() !== 'ACTIVE') {
-            //echo 'Status inactive. Cocote export is not configured!';
-            Form::msgConfirm($this->l('Status inactive. Cocote n\'est pas configuré!'), array('module' => 'cocotefeed', 'form' => 'default'));
+            echo 'Status inactive. Cocote export is not configured!';
             die();
         }
 
@@ -43,7 +42,7 @@ class GenerateXml extends ObjectModel
         $productObj = new Product();
 
         $products = $productObj->getProducts($this->langID, 0, 0, 'id_product', 'DESC');
-        
+
         $domtree = new DOMDocument('1.0', 'UTF-8');
 
         $root= $domtree->createElement("shop");
@@ -69,7 +68,7 @@ class GenerateXml extends ObjectModel
 
         $xmlRootTemponary = $domtree->createElement("offers");
         $xmlRoot = $xmlRoot->appendChild($xmlRootTemponary);
-        
+
         foreach($products as $product){
             $product['quantity'] = Product::getQuantity($product['id_product']);
             $this->getItemInnerXmlElements($product, $domtree);
@@ -89,7 +88,7 @@ class GenerateXml extends ObjectModel
     {
         $offers = $domtree->getElementsByTagName('offers')->item(0);
 
-        if($product['quantity']>0 && $this->stock) {
+        if(($this->stock && $product['quantity']>0) || !$this->stock) {
             $links = $this->getProductLinks($product['id_product']);
 
             $currentprod = $domtree->createElement('item');
@@ -145,17 +144,17 @@ class GenerateXml extends ObjectModel
         $product = new Product($productID);
         $response['product'] = $link->getProductLink($product);
         $images = $product->getImages($this->langID);
-        
+
         if(isset($images[0])){
             $response['image1'] = $this->protocol.'://'.$link->getImageLink($product->link_rewrite[Context::getContext()->language->id],$images[0]['id_image']);
-        } 
-        
+        }
+
         if(isset($images[1])){
             $response['image2'] = $this->protocol.'://'.$link->getImageLink($product->link_rewrite[Context::getContext()->language->id],$images[1]['id_image']);
         } else {
             $response['image2'] = null;
         }
-        
+
         return $response;
     }
 
@@ -261,7 +260,7 @@ class GenerateXml extends ObjectModel
             }
             $i++;
         }
-        
+
         return $keywords;
     }
 

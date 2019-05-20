@@ -4,13 +4,13 @@ require_once( _PS_MODULE_DIR_  . $this->name . DIRECTORY_SEPARATOR . 'helpers' .
 
 class DBTeam extends ModuleAdminController
 {
-    public function __construct() 
+    public function __construct()
     {
         parent::__construct();
     }
-    
+
     /* CONFIGURATION */
-    
+
     public static function getFormSubmitConfigValue()
     {
         $values['COCOTE_EXPORTED_SHOP_ID'] = Tools::getValue('COCOTE_EXPORTED_SHOP_ID');
@@ -19,7 +19,7 @@ class DBTeam extends ModuleAdminController
 
         return $values;
     }
-    
+
     public static function saveFormSubmitConfigValue($values)
     {
 
@@ -30,16 +30,16 @@ class DBTeam extends ModuleAdminController
 
         return true;
     }
-    
+
     public static function deleteConfiguration()
     {
-        
+
         Configuration::deleteByName('COCOTE_EXPORTED_SHOP_ID');
         Configuration::deleteByName('COCOTE_EXPORTED_PRIVATE_KEY');
         Configuration::deleteByName('COCOTE_STATUS_STOCK');
         return true;
     }
-    
+
     public static function validateFormConfigValue(&$values)
     {
         $errors = false;
@@ -52,17 +52,17 @@ class DBTeam extends ModuleAdminController
         if(empty($values['COCOTE_EXPORTED_PRIVATE_KEY'])){
             $errors[] = 'Private key est requis!';
         }
-            
+
         if($errors != false){
             return $errors;
-        } 
+        }
         else{
             return true;
         }
     }
-    
+
     /* STATUS */
-    
+
     public static function checkConfigurationStatus()
     {
         $status = 'ACTIVE';
@@ -73,14 +73,14 @@ class DBTeam extends ModuleAdminController
 
         return $status;
     }
-    
+
     public static function checkProductExportStatus($productID)
     {
         return 'ACTIVE';
         $sqlCategories = "SELECT categories,labels FROM cocote_export WHERE product_id = ".(int)$productID;
         $product = Db::getInstance()->getRow($sqlCategories);
-        
-        
+
+
         if(!empty($product['labels']) && !is_null($product['labels']) && !empty($product['categories']) && !is_null($product['categories'])){
             return 'ACTIVE';
         }
@@ -88,7 +88,7 @@ class DBTeam extends ModuleAdminController
             return 'INACTIVE';
         }
     }
-    
+
     public static function checkHowManyProductIsConfigured()
     {
         $sql = "SELECT count(*) as total FROM `cocote_export` WHERE labels != '' AND categories != '' ";
@@ -97,7 +97,7 @@ class DBTeam extends ModuleAdminController
         }
         else{
             return 0;
-        }  
+        }
     }
 
     public static function checkHowManyProduct($statusStock = true)
@@ -114,9 +114,14 @@ class DBTeam extends ModuleAdminController
         }else{
             $sql = "SELECT count(*) as total FROM "._DB_PREFIX_."product p INNER JOIN "._DB_PREFIX_."stock_available sa ON p.id_product = sa.id_product AND id_product_attribute = 0 AND sa.quantity>0";
             if($row = Db::getInstance()->getRow($sql)){
-                return $row['total'];
-            }
-            else{
+                if($row['total'] > 0) {
+                    return $row['total'];
+                }else{
+                    $sql = "SELECT count(*) as total FROM "._DB_PREFIX_."product";
+                    $row = Db::getInstance()->getRow($sql);
+                    return $row['total'];
+                }
+            }else{
                 return 0;
             }
         }
@@ -135,7 +140,7 @@ class DBTeam extends ModuleAdminController
                                                 '". $urlShopFinal."',
                                                 '". $export_status ."'
                                                 )"
-                                    );
+            );
         }
     }
 
