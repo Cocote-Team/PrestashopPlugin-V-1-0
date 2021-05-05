@@ -28,3 +28,18 @@ Cliquer sur enregistrer.
 Votre url flux est désormais disponible.
 
 Cot Cot Cot!
+
+4) Configurer et activer les crons
+
+Pour faire fonctionner les crons sur Prestashop il faut faire les choses suivantes :
+
+- Télécharger le module cronjobs https://github.com/Cocote-Team/PrestashopPlugin/raw/master/cronjobs.zip
+- Aller sur votre Admin PrestaShop : Modules > Modules & services et cliquer sur 'installer un module'
+- Faire un Drag n Drop du fichier telechargé cronjobs.zip .
+- Une fois installer aller dans sa configuration et passer le *Mode cron* en Avancé et enregistrer
+- Après enregistrement ajouter au sein de la crontab du serveur le cron passer dans l'encart bleu ciel
+- En-dessous, dans les tâches cron il devrait y avoir le cron du *Module Cocotefeed*.
+
+> Mode cron :
+>* Le mode basique utilise un webservice Prestashop mais cela implique de configurer des éléments en plus au sein du shop qui peut potentiellement entrer collision avec d'autres modules
+>* Le mode avancé utilise la crontab linux traditionnelle.
