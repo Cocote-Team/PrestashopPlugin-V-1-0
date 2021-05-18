@@ -11,7 +11,7 @@ class CocoteFeed extends Module
     {
         $this->name = 'cocotefeed';
         $this->tab = 'cocotefeed';
-        $this->version = '1.0.8';
+        $this->version = '1.0.11';
         $this->author = 'Cocote Team';
         $this->need_instance = 0;
         $this->controllers = array('cocotefeed');
@@ -39,7 +39,6 @@ class CocoteFeed extends Module
         if (!parent::install() ||
             !$this->registerHook('actionOrderStatusUpdate')
             || !$this->registerHook('actionCronJob')
-            || !$this->registerHook('header')
         ){
             return false;
         }
@@ -141,7 +140,7 @@ class CocoteFeed extends Module
                     if (!file_exists(_PS_MODULE_DIR_ . $this->name . DIRECTORY_SEPARATOR . 'log')) {
                         mkdir(_PS_MODULE_DIR_ . $this->name . DIRECTORY_SEPARATOR . 'log');
                     }
-                    $fp = fopen(_PS_MODULE_DIR_ . $this->name . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'log_' . date('Ymd') . '.log', 'a+');
+                    $fp = fopen(_PS_MODULE_DIR_ . $this->name . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR .'log_' . date('Ymd') . '.log', 'a+');
                     $observer = '[LOG ' . date('Y-m-d H:i:s') . '] newOrderStatus = ' . $params['newOrderStatus']->id;
                     fwrite($fp, $observer . "\n");
 
@@ -166,19 +165,6 @@ class CocoteFeed extends Module
                     $cashback = new CashbackCocote($rowCocoteExport['shop_id'], $rowCocoteExport['private_key'], $rowCustomer['email'], $params['id_order'], $rowCustomer['total_paid'], 'EUR', $status, $skus);
                     $cashback->sendOrderToCocote();
                 }
-            } else {
-                $rowCustomer = DBTeam::checkCustomerByIdOrder($params['id_order']);
-                $rowCocoteExport = DBTeam::checkCocoteExport();
-                if (count($rowCocoteExport) > 0) {
-                    $this->context->smarty->assign(
-                        array(
-                            'mSiteId' => $rowCocoteExport['shop_id'],
-                            'amount' => $rowCustomer['total_paid'],
-                            'orderId' => $params['id_order']
-                        ));
-                }
-
-                return $this->display(__FILE__, 'views/templates/front/analytics_confirm.tpl');
             }
         }
     }
@@ -389,19 +375,5 @@ class CocoteFeed extends Module
             'month' => -1,
             'day_of_week' => -1
         );
-    }
-
-    public function hookDisplayHeader()
-    {
-        // script de suivi en JS
-        $rowCocoteExport = DBTeam::checkCocoteExport();
-        if(count($rowCocoteExport)>0) {
-            $this->context->smarty->assign(
-                array(
-                    'mSiteId' => $rowCocoteExport['shop_id'],
-                )
-            );
-        }
-        return $this->display(__FILE__, 'views/templates/front/analytics.tpl');
     }
 }

@@ -1,5 +1,3 @@
-//fixed-width-xl
-
 $(document).ready(function(){
    $(".cocotefeed").find('select').each(function(index,element){
        if($(this).hasClass('fixed-width-xl')){
