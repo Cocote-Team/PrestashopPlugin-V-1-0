@@ -132,6 +132,10 @@ class GenerateXml extends ObjectModel
 
             $currentprod->appendChild($domtree->createElement('gtin', $gtin));
             $currentprod->appendChild($domtree->createElement('stock', $product['quantity']));
+
+            if (floatval($product['weight']) > 0) {
+                $currentprod->appendChild($domtree->createElement('weight', floatval($product['weight'])));
+            }
         }
     }
 
