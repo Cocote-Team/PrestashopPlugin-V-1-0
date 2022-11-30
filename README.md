@@ -21,7 +21,7 @@ Faire un Drag n Drop du fichier telechargé cocotefeed.zip .
 
 Cliquer sur l'element 'Cocote Feed' dans la colonne de gauche puis cliquer sur "Configurer" du Module Cocotefeed.
                    
-Renseigner vos clés (diponibles depuis https://fr.cocote.com/mon-compte/ma-boutique/script-de-suivi ) 
+Renseigner vos clés (diponibles depuis https://fr.cocote.com/mon-compte/ma-boutique/doc/pixel ) 
 
 Cliquer sur enregistrer.
 
