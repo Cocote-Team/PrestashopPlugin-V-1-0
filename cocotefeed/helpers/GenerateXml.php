@@ -41,7 +41,7 @@ class GenerateXml extends ObjectModel
 
         $productObj = new Product();
 
-        $products = $productObj->getProducts($this->langID, 0, 0, 'id_product', 'DESC');
+        $products = $productObj->getProducts($this->langID, 0, 0, 'id_product', 'DESC', false, true, null );
 
         $domtree = new DOMDocument('1.0', 'UTF-8');
 
