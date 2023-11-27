@@ -41,7 +41,7 @@ class GenerateXml extends ObjectModel
 
         $productObj = new Product();
 
-        $products = $productObj->getProducts($this->langID, 0, 0, 'id_product', 'DESC', false, true, null );
+        $products = $productObj->getProducts($this->langID, 0, 0, 'id_product', 'DESC');
 
         $domtree = new DOMDocument('1.0', 'UTF-8');
 
@@ -123,6 +123,63 @@ class GenerateXml extends ObjectModel
             $currentprod->appendChild($domtree->createElement('category', $categoriesAll));
 
             $priceTTC = Product::getPriceStatic($product['id_product']);
+
+
+            //exVatPrice
+
+            $oProd = new Product($product['id_product']);
+
+
+            $attrs = $oProd->getAttributeCombinations(Context::getContext()->language->id);
+
+
+            if($attrs) {
+                $VariationsTag = $domtree->createElement('variations');
+                $Variation=[];
+                foreach($attrs as $attr){
+
+                    $priceAtt=0;
+                    $VT = $domtree->createElement('variation');
+
+                    $VTid=$domtree->createElement('id',$attr['id_product_attribute']);
+                    $VTtitle=$domtree->createElement('title',$attr['group_name']);
+                    $VTvatprice=$domtree->createElement('vatPrice',$priceTTC+$attr['price']);
+
+                    $priceAtt=$product['weight']+$attr['weight'];
+                    $VTexvatprice=$domtree->createElement('exVatPrice',round($priceAtt/1.2,2));
+                    $VTvat=$domtree->createElement('vatPercent','20');
+
+                    $VTstock=$domtree->createElement('globalStocks',$attr['quantity']);
+                    $VTweight=$domtree->createElement('unitWeight',$product['weight']+$attr['weight']);
+
+                    $VToption=$domtree->createElement('option');
+                    $VToptionType=$domtree->createElement('type',$attr['group_name']);
+                    $VToptionValue=$domtree->createElement('value',$attr['attribute_name']);
+                    $VToption->appendChild($VToptionType);
+                    $VToption->appendChild($VToptionValue);
+
+                    $VToptions=$domtree->createElement('options');
+                    $VToptions->appendChild($VToption);
+
+
+
+                    $VT->appendChild($VTid);
+                    $VT->appendChild($VTtitle);
+                    $VT->appendChild($VTvatprice);
+                    $VT->appendChild($VTexvatprice);
+                    $VT->appendChild($VTvat);
+                    $VT->appendChild($VTstock);
+                    $VT->appendChild($VTweight);
+                    $VT->appendChild($VToptions);
+
+
+                    $VariationsTag->appendChild($VT);
+                }
+                $currentprod->appendChild($VariationsTag);
+            }
+
+
+
             $currentprod->appendChild($domtree->createElement('price', number_format(round($priceTTC, 2), 2, '.', ' ')));
 
             $gtin = $product['ean13'];
