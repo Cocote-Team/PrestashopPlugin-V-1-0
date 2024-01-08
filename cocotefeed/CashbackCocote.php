@@ -60,7 +60,7 @@ class CashbackCocote
                     . $this->_skus
                     . "\n");
 
-                $start = mktime();
+                $start = time();
 
                 $curl = curl_init();
                 curl_setopt($curl, CURLOPT_POST, 1);
